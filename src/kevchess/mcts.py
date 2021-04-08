@@ -1,6 +1,6 @@
 import math
-from typing import Dict, List, Set
 from collections import defaultdict
+from typing import Dict, List, Set
 
 from node import Node
 

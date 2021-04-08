@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from chess import Board, Outcome
-from dataclasses import dataclass
-from typing import FrozenSet, Optional
 import random
+from dataclasses import dataclass
 from functools import lru_cache
+from typing import FrozenSet, Optional
+
+from chess import Board, Outcome
 
 
 @lru_cache()
@@ -48,19 +49,20 @@ def game_reward(fen: str) -> float:
 class Node:
     fen: str
 
-    def find_children(self, random_seed=1) -> FrozenSet[Node]:
+    def find_children(self) -> FrozenSet[Node]:
         """
         Get all valid moves
         """
         return children(self.fen)
 
-    def find_random_child(self, seed: Optional[int] = None) -> Node:
+    def find_random_child(self) -> Node:
         """
         Get a random move
         """
-        random.seed(seed)
-        selection, = random.sample(self.find_children(), 1)
-        return selection
+        random_move = random.choice(list(Board(self.fen).legal_moves))
+        new_board = Board(fen=self.fen)
+        new_board.push(random_move)
+        return Node(fen=new_board.fen())
 
     def is_terminal(self) -> bool:
         """

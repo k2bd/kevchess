@@ -1,13 +1,12 @@
-import os
-import berserk
 import json
-import asyncio
+import os
+import time
+
+import berserk
 import requests
+from chess import STARTING_FEN, Board, Move
 from mcts import Mcts
 from node import Node
-from chess import Board, Move, STARTING_FEN
-import aiohttp
-import time
 
 token = os.environ["LICHESS_BOT_TOKEN"]
 
@@ -16,10 +15,12 @@ def upgrade_to_bot(token: str):
     """
     Upgrade an account to a bot account
     """
-    print(requests.post(
-        "https://lichess.org/api/bot/account/upgrade",
-        headers={"Authorization": f"Bearer {token}"}
-    ).text)
+    print(
+        requests.post(
+            "https://lichess.org/api/bot/account/upgrade",
+            headers={"Authorization": f"Bearer {token}"},
+        ).text
+    )
 
 
 def get_move(old_node: Node, new_node: Node) -> str:
@@ -34,8 +35,7 @@ def get_move(old_node: Node, new_node: Node) -> str:
             return move.uci()
     else:
         raise RuntimeError(
-            "Trying to make illegal move! "
-            f"{old_node.fen} -> {new_node.fen}"
+            "Trying to make illegal move! " f"{old_node.fen} -> {new_node.fen}"
         )
 
 
@@ -64,23 +64,27 @@ class Game:
         if self.my_turn:
             self.make_move()
 
-        #self.turn_speed = self.initial_state["clock"]["increment"]
+        # self.turn_speed = self.initial_state["clock"]["increment"]
 
     def run(self):
         for event in self.stream:
             print("Got event: ", event)
-            if event['type'] == 'gameState':
+            if event["type"] == "gameState":
                 self.handle_state_change(event)
-            elif event['type'] == 'chatLine':
+            elif event["type"] == "chatLine":
                 self.handle_chat_line(event)
 
     def make_move(self):
         start = time.time()
         print("Thinking...")
+        think_count = 0
         while time.time() - start < self.turn_speed_seconds:
             self.tree.rollout(self.node)
+            think_count += 1
+        print(f"Thought of {think_count} moves")
 
         new_node = self.tree.choose(self.node)
+        print(f"Move score: : {self.tree.rewards[new_node]}/{self.tree.visit_count[new_node]}")
 
         # Make the selected move
         move_str = get_move(self.node, new_node)
@@ -101,14 +105,12 @@ class Game:
         if self.my_turn:
             self.make_move()
 
-
-
     def handle_chat_line(self, event):
         print(event)
 
 
 def accept_challenge(event) -> bool:
-    return event["challenge"]['challenger']["id"] == "k2bd"
+    return event["challenge"]["challenger"]["id"] == "k2bd"
 
 
 if __name__ == "__main__":
@@ -121,11 +123,11 @@ if __name__ == "__main__":
     is_polite = True
     for event in client.bots.stream_incoming_events():
         print(json.dumps(event, indent=2))
-        if event['type'] == 'challenge':
+        if event["type"] == "challenge":
             if accept_challenge(event):
-                client.bots.accept_challenge(event["challenge"]['id'])
+                client.bots.accept_challenge(event["challenge"]["id"])
             elif is_polite:
-                client.bots.decline_challenge(event["challenge"]['id'])
-        elif event['type'] == 'gameStart':
-            game = Game(client, event["game"]['id'], player_id=my_id)
+                client.bots.decline_challenge(event["challenge"]["id"])
+        elif event["type"] == "gameStart":
+            game = Game(client, event["game"]["id"], player_id=my_id)
             game.run()
