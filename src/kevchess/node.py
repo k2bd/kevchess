@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import FrozenSet, Optional
+from typing import FrozenSet
 
 from chess import Board, Outcome
 
