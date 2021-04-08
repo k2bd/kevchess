@@ -51,6 +51,14 @@ colorama = ["colorama (>=0.4.3)"]
 d = ["aiohttp (>=3.3.2)", "aiohttp-cors"]
 
 [[package]]
+name = "chess"
+version = "1.5.0"
+description = "A chess library with move generation and validation, Polyglot opening book probing, PGN reading and writing, Gaviota tablebase probing, Syzygy tablebase probing, and XBoard/UCI engine communication."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "click"
 version = "7.1.2"
 description = "Composable command line interface toolkit"
@@ -285,7 +293,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "ad80fa454469f6d6d954c44127f347dad571c2d3910293852d82b18da8884e9a"
+content-hash = "85ae15e45137e8c17de87ff5cab47716fa84e1e4871a1fb86f3b7aeb86fe091f"
 
 [metadata.files]
 appdirs = [
@@ -302,6 +310,10 @@ attrs = [
 ]
 black = [
     {file = "black-20.8b1.tar.gz", hash = "sha256:1c02557aa099101b9d21496f8a914e9ed2222ef70336404eeeac8edba836fbea"},
+]
+chess = [
+    {file = "chess-1.5.0-py3-none-any.whl", hash = "sha256:d78e83273c6ee58a7b5b557fecdec5082aa44e457b6db5f7f4224eabc7520462"},
+    {file = "chess-1.5.0.tar.gz", hash = "sha256:6969ca671260e24622d522b4dce9f96edbfa3878dd04ac9001cac844d5e64937"},
 ]
 click = [
     {file = "click-7.1.2-py2.py3-none-any.whl", hash = "sha256:dacca89f4bfadd5de3d7489b7c8a566eee0d3676333fbb50030263894c38c0dc"},
