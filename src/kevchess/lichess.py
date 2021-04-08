@@ -38,7 +38,7 @@ def get_move(old_node: Node, new_node: Node) -> str:
         )
 
 
-class Game:
+class AsnycGame:
     def __init__(self, game_id, player_id, explore_weight=1.0):
         self.game_id = game_id
         self.player_id = player_id
@@ -49,7 +49,7 @@ class Game:
     def start(self, loop=None):
         loop = loop or asyncio.get_event_loop()
 
-        self.session = aiohttp.ClientSession(headers={"Authorization": f"Bearer {token}"})
+        loop.run_until_complete(self.connect())
 
         self.learn_task = loop.create_task(self.learn())
         self.events_task = loop.create_task(self.handle_events())
@@ -64,6 +64,9 @@ class Game:
         self.events_task.cancel()
         self.make_moves_task.cancel()
 
+    async def connect(self):
+        self.session = aiohttp.ClientSession(headers={"Authorization": f"Bearer {token}"})
+
     async def learn(self):
         while True:
             if self.playing:
@@ -77,24 +80,23 @@ class Game:
                 event = json.loads(raw_event)
                 print("Got event: ", event)
                 if event['type'] == "gameFull":
-                    self.handle_game_info()
+                    self.handle_game_info(event)
                 elif event['type'] == 'gameState':
                     self.handle_state_change(event)
                 elif event['type'] == 'chatLine':
                     self.handle_chat_line(event)
-                else:
-                    raise RuntimeError(f"Invalid event: {event}")
                 await asyncio.sleep(0)
 
     async def make_moves(self) -> None:
         while True:
-            if self.playing:
+            if self.playing and self.my_turn:
+                print("trying to make move")
                 new_node = self.tree.choose(self.node)
 
                 # Make the selected move
                 move_str = get_move(self.node, new_node)
                 print("Making move", move_str)
-                self.session.post(
+                await self.session.post(
                     f"https://lichess.org/api/bot/game/{self.game_id}/move/{move_str}"
                 )
 
@@ -125,15 +127,31 @@ class Game:
             board.push(Move.from_uci(move))
         self.node = Node(fen=board.fen())
 
-        print("My turn?", self.my_turn)
-
-        if self.my_turn:
-            self.make_move()
-        else:
-            self.my_turn = not self.my_turn
+        self.my_turn = True
 
     def handle_chat_line(self, chat_line):
         print(chat_line)
+
+
+class Game:
+    def __init__(self, game_id, player_id, explore_weight=1.0):
+        self.session = requests.Session()
+        self.session.headers.update({"Authorization": f"Bearer {token}"})
+
+        self.game_id = game_id
+        self.player_id = player_id
+        self.explore_weight = explore_weight
+
+        self.stream = self._stream_events()
+
+        game_info = next(self.stream)
+        
+
+    def _stream_events(self):
+        yield from self.session.get(
+            f'https://lichess.org/api/bot/game/stream/{self.game_id}',
+            stream=True,
+        )
 
 
 def accept_challenge(event) -> bool:
@@ -156,5 +174,5 @@ if __name__ == "__main__":
             elif is_polite:
                 client.bots.decline_challenge(event["challenge"]['id'])
         elif event['type'] == 'gameStart':
-            game = Game(event["game"]['id'], player_id=my_id)
+            game = AsnycGame(event["game"]['id'], player_id=my_id)
             game.start()
