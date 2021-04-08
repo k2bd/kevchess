@@ -7,6 +7,8 @@ authors = ["Kevin Duff <kevinkelduff@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.9"
 chess = "^1.5.0"
+berserk = "^0.10.0"
+aiohttp = "^3.7.4"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

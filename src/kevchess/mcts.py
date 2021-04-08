@@ -29,6 +29,9 @@ class Mcts:
     def choose(self, node: Node) -> Node:
         """Choose a new move in a game from a given node"""
         if node.is_terminal():
+            print("Terminal node issue!")
+            print("Node: ", node)
+            print("Children: ", node.find_children())
             raise RuntimeError("Cannot move from a terminal node")
 
         if node not in self.children:
